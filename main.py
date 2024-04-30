@@ -70,7 +70,7 @@ async def handler(update, context):
 async def myaccount(update, context):
     user = update.message.from_user
     matches, wins = cursor.execute(f"""SELECT matches, wins FROM stats WHERE telegram_id = '{user.id}'""").fetchone()
-    await update.message.reply_text(f"*👤 ID Пользователя: `{user.id}`\n🎮 Matches played: {matches}\n🥇 Wins: {wins}*", parse_mode="MarkdownV2")
+    await update.message.reply_text(f"*👤 ID Пользователя: `{user.id}`\n🎮 Matches played: {matches}\n🏆 Wins: {wins}\n😢 Loses: {matches - wins}*", parse_mode="MarkdownV2")
 
 
 async def get_points(update, context):
