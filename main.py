@@ -7,8 +7,6 @@ from telegram.ext import Application, MessageHandler, filters, CommandHandler, C
 from dotenv import load_dotenv
 import os
 
-from pprint import pprint
-
 load_dotenv()
 
 logging.basicConfig(
