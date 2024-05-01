@@ -7,6 +7,8 @@ from telegram.ext import Application, MessageHandler, filters, CommandHandler, C
 from dotenv import load_dotenv
 import os
 
+from pprint import pprint
+
 load_dotenv()
 
 logging.basicConfig(
@@ -65,6 +67,22 @@ async def handler(update, context):
         conn.commit()
         cursor.execute(f"""UPDATE users SET answering = False WHERE telegram_id = '{user.id}'""")
         conn.commit()
+
+
+async def flag(update, context):
+    user = update.message.from_user
+    answering = cursor.execute(f"""SELECT answering FROM users WHERE telegram_id = '{user.id}'""").fetchone()[0]
+    data = context.args
+    if len(data) != 1:
+        await update.message.reply_text("To use this function, after /flag you need to enter the name of the country whose flag you want to see", parse_mode="MarkdownV2")
+    elif answering:
+        await update.message.reply_text("You are currently answering and cannot use this function", parse_mode="MarkdownV2")
+    else:
+        c = requests.get(f"https://restcountries.com/v3.1/translation/{data[0]}").json()
+        if "status" in c:
+            await update.message.reply_text("This country was not found", parse_mode="MarkdownV2")
+        else:
+            await update.message.reply_photo(c[0]["flags"]["png"], parse_mode="MarkdownV2", caption=c[0]["name"]["common"])
 
 
 async def myaccount(update, context):
@@ -149,7 +167,7 @@ async def start(update, context):
         [KeyboardButton("/myaccount")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(f"*👋 Hi\! Welcome to the FlagGuesserBot\!*\n\n📍/play \- _to start a game_\n📍/points \- _to get your points number_", parse_mode="MarkdownV2", reply_markup=reply_markup)
+    await update.message.reply_text(f"*👋 Hi\! Welcome to the FlagGuesserBot\!*\n\n📍/play \- _start a game_\n📍/myaccount \- _your account stats_\n📍/points \- _get your points number_", parse_mode="MarkdownV2", reply_markup=reply_markup)
 
 
 async def help(update, context):
@@ -166,6 +184,7 @@ async def help(update, context):
 def run():
     app = Application.builder().token(os.getenv("TOKEN")).build()
 
+    app.add_handler(CommandHandler("flag", flag))
     app.add_handler(CommandHandler("myaccount", myaccount))
     app.add_handler(CommandHandler("points", get_points))
     app.add_handler(CommandHandler("play", play))
